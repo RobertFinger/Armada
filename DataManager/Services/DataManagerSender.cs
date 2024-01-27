@@ -1,15 +1,14 @@
-﻿using System.Text;
-using System.Threading.Channels;
-using Models.Models;
+﻿using Models.Models;
 using RabbitMQ.Client;
+using System.Text;
 
-namespace Gateway.Services
+namespace DataManager.Services
 {
-    public class GatewaySender
+    public class DataManagerSender
     {
         private readonly IAsyncConnectionFactory _factory;
 
-        public GatewaySender(ILogger<GatewaySender> logger, IAsyncConnectionFactory factory)
+        public DataManagerSender(ILogger<DataManagerSender> logger, IAsyncConnectionFactory factory)
         {
             _logger = logger;
             _factory = factory;
@@ -32,18 +31,17 @@ namespace Gateway.Services
             }
             catch (Exception)
             {
-
                 return false;
             }
         }
 
-        public ILogger<GatewaySender> _logger { get; }
+        public ILogger<DataManagerSender> _logger { get; }
 
         private void StartMessageService(MessageDestination destination, byte[] message)
         {
 
             _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
-            _factory.ClientProvidedName = "Gateway Sender";
+            _factory.ClientProvidedName = "Lobby Sender";
 
             IConnection connection = _factory.CreateConnection();
             IModel channel = connection.CreateModel();

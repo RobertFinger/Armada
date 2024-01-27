@@ -24,7 +24,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(
         options =>
@@ -56,7 +56,8 @@ builder.Services.AddSwaggerGen(
         });
 
 
-builder.Services.AddTransient<GatewaySender>();
+builder.Services.AddSingleton<GatewaySender>();
+builder.Services.AddSingleton<GatewayReceiver>();
 builder.Services.AddTransient<IAsyncConnectionFactory, ConnectionFactory>();
 
 var app = builder.Build();
@@ -73,6 +74,8 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+var rabbitMQReceiver = app.Services.GetService<GatewayReceiver>();
+rabbitMQReceiver?.StartListening();
 
 app.MapControllers();
 

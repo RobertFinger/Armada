@@ -13,7 +13,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddLogging();
 builder.Services.AddTransient<IAsyncConnectionFactory, ConnectionFactory>();
 builder.Services.AddSingleton<PaymentsReceiver>();
-
+builder.Services.AddSingleton<PaymentSender>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

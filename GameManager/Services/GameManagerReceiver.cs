@@ -26,7 +26,7 @@ namespace GameManager.Services
             _channel = _connection.CreateModel();
 
             _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
-            _factory.ClientProvidedName = "Rabbit Mambo #5 receiver 1";
+            _factory.ClientProvidedName = "Game Manager Receiver";
 
             _channel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Direct, durable: false, autoDelete: false, arguments: null);
             _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
@@ -39,6 +39,7 @@ namespace GameManager.Services
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
+                Thread.Sleep(1000);
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 Console.WriteLine($"Received message: {message}");

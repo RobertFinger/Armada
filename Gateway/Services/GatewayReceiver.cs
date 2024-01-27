@@ -1,4 +1,5 @@
-﻿using RabbitMQ.Client;
+﻿using Models.Models;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 
@@ -11,8 +12,8 @@ namespace Gateway.Services
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly string _exchangeName = "exchangerz";
-        private readonly string _routingKey = "route keyz";
-        private readonly string _queueName = "queue namez";
+        private readonly string _routingKey = MessageDestination.Gateway.ToString();
+        private readonly string _queueName = $"{MessageDestination.Gateway} Queue";
         private readonly ILogger<GatewayReceiver> _logger;
         private readonly IAsyncConnectionFactory _factory;
 
@@ -39,6 +40,7 @@ namespace Gateway.Services
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
+                Thread.Sleep(1000);
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 Console.WriteLine($"Received message: {message}");

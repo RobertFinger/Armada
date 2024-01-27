@@ -13,6 +13,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddLogging();
 builder.Services.AddTransient<IAsyncConnectionFactory, ConnectionFactory>();
 builder.Services.AddSingleton<DataManagerReceiver>();
+builder.Services.AddSingleton<DataManagerSender>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

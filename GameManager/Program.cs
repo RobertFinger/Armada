@@ -13,6 +13,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddLogging();
 builder.Services.AddTransient<IAsyncConnectionFactory, ConnectionFactory>();
 builder.Services.AddSingleton<GameManagerReceiver>();
+builder.Services.AddSingleton<GameManagerSender>();
 
 var app = builder.Build();
 

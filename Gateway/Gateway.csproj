@@ -19,7 +19,6 @@
     <ProjectReference Include="..\AccountsManager\AccountsManager.csproj" />
     <ProjectReference Include="..\Authentication\Authentication.csproj" />
     <ProjectReference Include="..\DataManager\DataManager.csproj" />
-    <ProjectReference Include="..\DeveloperPortal\DeveloperPortal.csproj" />
     <ProjectReference Include="..\GameManager\GameManager.csproj" />
     <ProjectReference Include="..\LobbyManager\LobbyManager.csproj" />
     <ProjectReference Include="..\Models\Models.csproj" />
