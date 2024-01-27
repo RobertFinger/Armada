@@ -12,7 +12,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddLogging();
 builder.Services.AddTransient<IAsyncConnectionFactory, ConnectionFactory>();
 builder.Services.AddSingleton<LobbyReceiver>();
-
+builder.Services.AddSingleton<LobbySender>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

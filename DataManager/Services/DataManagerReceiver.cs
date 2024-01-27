@@ -39,6 +39,7 @@ namespace DataManager.Services
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
+                Thread.Sleep(1000);
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 Console.WriteLine($"Received message: {message}");

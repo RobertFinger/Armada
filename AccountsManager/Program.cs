@@ -14,6 +14,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddLogging();
 builder.Services.AddTransient<IAsyncConnectionFactory, ConnectionFactory>();
 builder.Services.AddSingleton<AccountsManagerReceiver>();
+builder.Services.AddSingleton<AccountsManagerSender>(); 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
