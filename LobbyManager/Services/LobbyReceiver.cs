@@ -1,8 +1,8 @@
-﻿using RabbitMQ.Client;
+﻿using Models.Models;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System;
 using System.Text;
-
+using System.Text.Json;
 
 namespace LobbyManager.Services
 {
@@ -41,17 +41,43 @@ namespace LobbyManager.Services
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
-                Thread.Sleep(1000);
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                Console.WriteLine($"Received message: {message}");
 
-                _sender.SendMessage(Models.Models.MessageDestination.Gateway, "Lobby Manager: Got your message, Gateway, roger wilco.");
+                if (message.TryParseJson(out LobbyRequest result))
+                {
+                    if(!ReturnLobbyResults(result))
+                    {
+                        _logger.LogError("Error while returning lobby results: {result}", result);
+                    }
+
+                }
 
             };
 
             _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
         }
+
+
+           
+        private bool ReturnLobbyResults(LobbyRequest result)
+        {
+            if (result == null)
+                return false;
+
+            // go to the database and check for an existing lobby.
+            List<LobbyGameData> lobby = new();
+
+            for (var i = 0; i< 7; i++)
+            {
+                lobby.Add(new LobbyGameData());       
+            }
+
+            string? resultJson = JsonSerializer.Serialize(lobby);
+            _sender.SendMessage(MessageDestination.Gateway, resultJson);
+            return true;
+        }
+
 
         public void StopListening()
         {

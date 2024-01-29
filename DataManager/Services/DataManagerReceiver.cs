@@ -15,13 +15,14 @@ namespace DataManager.Services
         private readonly string _queueName = "Data Queue";
         private readonly ILogger<DataManagerReceiver> _logger;
         private readonly IAsyncConnectionFactory _factory;
+        private readonly DataManagerSender _sender;
 
-        public DataManagerReceiver(ILogger<DataManagerReceiver> logger, IAsyncConnectionFactory factory)
+        public DataManagerReceiver(ILogger<DataManagerReceiver> logger, IAsyncConnectionFactory factory, DataManagerSender sender)
         {
 
             _logger = logger;
             _factory = factory;
-
+            _sender = sender;
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
 
@@ -39,10 +40,11 @@ namespace DataManager.Services
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
-                Thread.Sleep(1000);
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
+                _sender.SendMessage(Models.Models.MessageDestination.Gateway, "Ok gateway, data management will handle it.");
                 Console.WriteLine($"Received message: {message}");
+                _logger.LogInformation("{Message}", message);
             };
 
             _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);

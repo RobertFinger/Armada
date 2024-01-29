@@ -15,13 +15,14 @@ namespace PaymentManager.Services
         private readonly string _queueName = "Payments Queue";
         private readonly ILogger<PaymentsReceiver> _logger;
         private readonly IAsyncConnectionFactory _factory;
+        private readonly PaymentSender _sender;
 
-        public PaymentsReceiver(ILogger<PaymentsReceiver> logger, IAsyncConnectionFactory factory)
+        public PaymentsReceiver(ILogger<PaymentsReceiver> logger, IAsyncConnectionFactory factory, PaymentSender sender)
         {
 
             _logger = logger;
             _factory = factory;
-
+            _sender = sender;
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
 
@@ -43,6 +44,8 @@ namespace PaymentManager.Services
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 Console.WriteLine($"Received message: {message}");
+                _logger.LogInformation("{Message}", message);
+                _sender.SendMessage(Models.Models.MessageDestination.Gateway, "Got your message, gateway, and payments wilco");
             };
 
             _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);

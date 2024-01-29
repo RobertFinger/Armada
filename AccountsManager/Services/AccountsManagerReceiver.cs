@@ -15,13 +15,14 @@ namespace AccountsManager.Services
         private readonly string _queueName = "Accounts Queue";
         private readonly ILogger<AccountsManagerReceiver> _logger;
         private readonly IAsyncConnectionFactory _factory;
+        private readonly AccountsManagerSender _sender;
 
-        public AccountsManagerReceiver(ILogger<AccountsManagerReceiver> logger, IAsyncConnectionFactory factory)
+        public AccountsManagerReceiver(ILogger<AccountsManagerReceiver> logger, IAsyncConnectionFactory factory, AccountsManagerSender sender)
         {
 
             _logger = logger;
             _factory = factory;
-
+            _sender = sender;
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
 
@@ -42,6 +43,9 @@ namespace AccountsManager.Services
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 Console.WriteLine($"Received message: {message}");
+
+                _logger.LogInformation("{Message}", message);
+                _sender.SendMessage(Models.Models.MessageDestination.Gateway, "Accounts replying to gateway.");
             };
 
             _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
