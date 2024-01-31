@@ -1,6 +1,6 @@
 ﻿namespace Models.Models
 {
-    public enum GameType { 
+    public enum GameAccessType { 
         basic,
         paid
     }

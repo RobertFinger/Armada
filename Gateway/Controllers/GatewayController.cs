@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.Models;
 using System.Text;
+using System.Text.Json;
 
 namespace Gateway.Controllers
 {
@@ -19,14 +20,14 @@ namespace Gateway.Controllers
             _messages = messages;
         }
 
-        [HttpGet("/Messenger")]
-        public void Messenger()
+        [HttpGet("/MessengerTest")]
+        public void MessengerTest()
         {
-            var mesageForAccountsManager = Encoding.UTF8.GetBytes("Gateway to Accounts Manager, come in Accounts Manager!");
-            var mesageForDataManager = Encoding.UTF8.GetBytes("Gateway to Data Manager, come in Data Manager!");
-            var mesageForGameManager = Encoding.UTF8.GetBytes("Gateway to Game Manager, come in Game Manager!");
-            var mesageForlobbyManager = Encoding.UTF8.GetBytes("Gateway to Lobby Manager, come in Lobby Manager!");
-            var mesageForPaymentManager = Encoding.UTF8.GetBytes("Gateway to Payment Manager, come in Payment Manager!");
+            var mesageForAccountsManager = "Gateway to Accounts Manager, come in Accounts Manager!";
+            var mesageForDataManager = "Gateway to Data Manager, come in Data Manager!";
+            var mesageForGameManager = "Gateway to LobbyGameData Manager, come in LobbyGameData Manager!";
+            var mesageForlobbyManager = "Gateway to Lobby Manager, come in Lobby Manager!";
+            var mesageForPaymentManager = "Gateway to Payment Manager, come in Payment Manager!";
 
             _messages.SendMessage(MessageDestination.Accounts, mesageForAccountsManager);
             _messages.SendMessage(MessageDestination.Data, mesageForDataManager);
@@ -36,12 +37,15 @@ namespace Gateway.Controllers
         }
 
         [HttpGet("/GetLobby"), Authorize(Roles = "User")]
-        public string GetLobby()
+        public ActionResult<Guid> GetLobby()
         {
- 
+            var lobbyRequest = new LobbyRequest() { RequestId = Guid.NewGuid(), GameType = GameType.Numbers, CallbackUri = "https://www.google.com"};
+            var requestJson = JsonSerializer.Serialize(lobbyRequest);
 
-
-            return "My Lobby";
+            _messages.SendMessage(MessageDestination.Lobby, requestJson);     
+            _logger.LogInformation("lobby request");
+            
+            return Ok(lobbyRequest.RequestId);
         }
     }
 }

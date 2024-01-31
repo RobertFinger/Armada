@@ -1,58 +1,93 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
+using Models.Services; 
+using Models.Models;
 
-
-namespace DataManager.Services
+namespace YourNamespace.Services
 {
-
-    public class DataManagerReceiver 
+    public class DataManagerReceiver : IHostedService
     {
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
-        private readonly string _exchangeName = "exchangerz";
-        private readonly string _routingKey = "Data";
-        private readonly string _queueName = "Data Queue";
         private readonly ILogger<DataManagerReceiver> _logger;
         private readonly IAsyncConnectionFactory _factory;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private IConnection _connection;
+        private IModel _channel;
+        private readonly string _exchangeName = "exchangerz";
+        private readonly string _queueName = "Data Queue";
+        private readonly string _routingKey = "Data";
 
-        public DataManagerReceiver(ILogger<DataManagerReceiver> logger, IAsyncConnectionFactory factory)
+        public DataManagerReceiver(ILogger<DataManagerReceiver> logger, IAsyncConnectionFactory factory, IServiceScopeFactory scopeFactory)
         {
-
             _logger = logger;
             _factory = factory;
-
-            _connection = _factory.CreateConnection();
-            _channel = _connection.CreateModel();
+            _scopeFactory = scopeFactory;
 
             _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
             _factory.ClientProvidedName = "Data Management Receiver";
 
-            _channel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Direct, durable: false, autoDelete: false, arguments: null);
-            _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-            _channel.QueueBind(queue: _queueName, exchange: _exchangeName, routingKey: _routingKey, arguments: null);
+            _connection = _factory.CreateConnection();
+            _channel = _connection.CreateModel();
 
+            _channel.ExchangeDeclare(_exchangeName, ExchangeType.Direct, durable: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare(_queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueBind(_queueName, _exchangeName, _routingKey, arguments: null);
         }
 
-        public void StartListening()
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            StartListening();
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            StopListening();
+            return Task.CompletedTask;
+        }
+
+        private void StartListening()
         {
             var consumer = new EventingBasicConsumer(_channel);
-            consumer.Received += (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
-                Thread.Sleep(1000);
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                Console.WriteLine($"Received message: {message}");
+                await SaveUserAsync(message);
             };
 
-            _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
+            _channel.BasicConsume(_queueName, autoAck: true, consumer: consumer);
         }
 
-        public void StopListening()
+        private async Task SaveUserAsync(string message)
+        {
+            using (var scope = _scopeFactory.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                if (message.TryParseJson(out User result))
+                {
+                    try
+                    {
+                        dbContext.Users.Add(result);
+                        await dbContext.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogCritical("Oops, {ex}", ex);
+                    }
+                }
+                else
+                {
+                    _logger.LogError("Didn't parse the user.");
+                }
+            }
+        }
+
+        private void StopListening()
         {
             _channel.Close();
             _connection.Close();
         }
     }
-
 }
