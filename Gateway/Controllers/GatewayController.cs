@@ -47,5 +47,16 @@ namespace Gateway.Controllers
             
             return Ok(lobbyRequest.RequestId);
         }
+
+        [HttpPost("/SaveUser")]
+        public ActionResult SaveUser(User user)
+        {
+
+            var userJson = JsonSerializer.Serialize(user); 
+            _messages.SendMessage(MessageDestination.Data, userJson);
+            _logger.LogInformation("Add user to queue for adding to db.");
+
+            return Ok();
+        }
     }
 }
