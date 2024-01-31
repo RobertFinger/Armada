@@ -7,5 +7,7 @@
         public const string MessageBrokerHost = "MessageBroker:Host";
         public const string MessageBrokerUserName = "MessageBroker:UserName";
         public const string MessageBrokerPassword = "MessageBroker:Password";
+        public const string DatabaseConnectionString = "SqlConnectionString:Default";
+        public const string RabbitMqUri = "RabbitMq:URI";
     }
 }

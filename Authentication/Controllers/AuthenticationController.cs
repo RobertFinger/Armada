@@ -3,99 +3,130 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Models.Models;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 
+namespace Authentication.Controllers;
 
-namespace Authentication.Controllers
+// https://www.youtube.com/watch?v=UwruwHl3BlU
+// https://www.youtube.com/watch?v=TDY_DtTEkes
+
+[Route("api/[controller]")]
+[ApiController]
+public class AuthenticationController : Controller
 {
-    // https://www.youtube.com/watch?v=UwruwHl3BlU
-    // https://www.youtube.com/watch?v=TDY_DtTEkes
+    private readonly IConfiguration? _configuration;
+    private readonly ILogger<AuthenticationController> _logger;
+    private static readonly User _user = new();
 
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AuthenticationController : Controller
+    public AuthenticationController(IConfiguration? config, ILogger<AuthenticationController> logger)
     {
-        private readonly IConfiguration? _configuration;
-        private static readonly User _user = new();
+        _configuration = config;
+        _logger = logger;   
+    }
 
-        public AuthenticationController(IConfiguration? config)
+    [HttpPost("register")]
+    public async Task<ActionResult<User>> Register(UserResponse request)
+    {
+        string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+        _user.Id = Guid.NewGuid();
+        _user.Username = request.Username;
+        _user.PasswordHash = passwordHash;
+
+        await SendUserInfoToGateway();
+
+        return Ok(_user);
+    }
+
+    private async Task SendUserInfoToGateway()
+    {
+        string apiUrl = "https://localhost:6001/SaveUser";
+
+        using (HttpClient client = new HttpClient())
         {
-            _configuration = config;
-        }
-
-        [HttpPost("register")]
-        public ActionResult<User> Register(UserResponse request)
-        {
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-            _user.Id = Guid.NewGuid();
-            _user.Username = request.Username;
-            _user.PasswordHash = passwordHash;
-
-            // save to database
-
-            return Ok(_user);
-        }
-
-
-        [HttpPost("login")]
-        public ActionResult<User> Login(UserResponse request)
-        {
-            // search database for user.
-
-            if (_user.Username != request.Username)
+            try
             {
-                return BadRequest("Incorrect Credentials");
-            }
+                var requestJson = JsonSerializer.Serialize(_user);
+                var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, _user.PasswordHash))
+                HttpResponseMessage response = await client.PostAsync(apiUrl, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                }
+                else
+                {
+                    _logger.LogError($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+                }
+            }
+            catch (Exception ex)
             {
-                return BadRequest("Incorrect Credentials");
+                _logger.LogError($"Error: {ex.Message}");
             }
-
-            var token = CreateToken(_user);
-            return Ok(token);
         }
 
-        [HttpPost("VerifyToken"), Authorize]
-        public ActionResult<User> VerifyToken(string userId)
+    }
+
+
+    [HttpPost("login")]
+    public ActionResult<User> Login(UserResponse request)
+    {
+        // search database for user.
+
+        if (_user.Username != request.Username)
         {
-
-            if (User.FindFirst(ClaimTypes.Name)?.Value != userId)
-            {
-                return BadRequest("Incorrect Credentials");
-            }
-
-            return Ok(true);
+            return BadRequest("Incorrect Credentials");
         }
 
-
-
-        private string CreateToken(User user)
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, _user.PasswordHash))
         {
+            return BadRequest("Incorrect Credentials");
+        }
 
-            List<Claim> claims = new()
+        var token = CreateToken(_user);
+        return Ok(token);
+    }
+
+    [HttpPost("VerifyToken"), Authorize]
+    public ActionResult<User> VerifyToken(string userId)
+    {
+
+        if (User.FindFirst(ClaimTypes.Name)?.Value != userId)
+        {
+            return BadRequest("Incorrect Credentials");
+        }
+
+        return Ok(true);
+    }
+
+
+
+    private string CreateToken(User user)
+    {
+
+        List<Claim> claims = new()
             {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Role, "User")
             };
 
-            var tokenKey = _configuration[AuthConstants.ApiKeySectionName];
+        var tokenKey = _configuration[AuthConstants.ApiKeySectionName];
 
-            // get key from database, not app settings!  This is just a placeholder
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey!));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey!));
 
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.UtcNow.AddDays(1),
-                signingCredentials: creds
-                );
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddDays(1),
+            signingCredentials: creds
+            );
 
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-            return jwt;
-        }
+        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+        return jwt;
     }
 }

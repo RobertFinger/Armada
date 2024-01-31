@@ -4,7 +4,6 @@ using Microsoft.OpenApi.Models;
 using Models.Models;
 using Swashbuckle.AspNetCore.Filters;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -37,6 +36,7 @@ builder.Services.AddSwaggerGen(
 
             options.OperationFilter<SecurityRequirementsOperationFilter>();
         });
+
 
 var app = builder.Build();
 
