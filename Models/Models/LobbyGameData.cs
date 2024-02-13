@@ -21,6 +21,15 @@ namespace Models.Models
             MaxPlayers = 2;
         }
 
+        public LobbyGameData(Guid lobbyId)
+        {
+            Players = new List<Player>();
+            Id = lobbyId;
+            Created = DateTime.UtcNow;
+            MaxPlayers = 2;
+        }
+
+
         public Guid LobbyId { get; set; }
         public Guid Id { get;}
         public IEnumerable<Player>? Players { get; set; }

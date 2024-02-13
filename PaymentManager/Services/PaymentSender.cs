@@ -6,10 +6,12 @@ namespace PaymentManager.Services
 {
     public class PaymentSender
     {
+        private readonly IConfiguration _configuration;
         private readonly IAsyncConnectionFactory _factory;
 
-        public PaymentSender(ILogger<PaymentSender> logger, IAsyncConnectionFactory factory)
+        public PaymentSender(IConfiguration configuration, ILogger<PaymentSender> logger, IAsyncConnectionFactory factory)
         {
+            _configuration = configuration;
             _logger = logger;
             _factory = factory;
 
@@ -40,7 +42,7 @@ namespace PaymentManager.Services
         private void StartMessageService(MessageDestination destination, byte[] message)
         {
 
-            _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
+            _factory.Uri = new Uri(_configuration[AuthConstants.RabbitMqUri]);
             _factory.ClientProvidedName = "Lobby Sender";
 
             IConnection connection = _factory.CreateConnection();

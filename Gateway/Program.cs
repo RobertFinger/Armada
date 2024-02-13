@@ -1,5 +1,4 @@
 using Gateway.Services;
-using LobbyManager.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -21,6 +20,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false,
         };
     });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("MyCorsPolicy", policy =>
+    {
+        policy.WithOrigins("*") 
+              .AllowAnyMethod() 
+              .AllowAnyHeader(); 
+    });
+});
 
 
 builder.Services.AddControllers();
@@ -57,10 +66,17 @@ builder.Services.AddSwaggerGen(
 
 
 builder.Services.AddSingleton<GatewaySender>();
-builder.Services.AddSingleton<GatewayReceiver>();
 builder.Services.AddTransient<IAsyncConnectionFactory, ConnectionFactory>();
 
 var app = builder.Build();
+
+app.UseCors("MyCorsPolicy");
+var webSocketOptions = new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromMinutes(2)
+};
+
+app.UseWebSockets(webSocketOptions);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

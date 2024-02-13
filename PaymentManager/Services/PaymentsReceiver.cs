@@ -1,4 +1,5 @@
-﻿using RabbitMQ.Client;
+﻿using Models.Models;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 
@@ -13,11 +14,12 @@ namespace PaymentManager.Services
         private readonly string _exchangeName = "exchangerz";
         private readonly string _routingKey = "Payments";
         private readonly string _queueName = "Payments Queue";
+        private readonly IConfiguration _configuration;
         private readonly ILogger<PaymentsReceiver> _logger;
         private readonly IAsyncConnectionFactory _factory;
         private readonly PaymentSender _sender;
 
-        public PaymentsReceiver(ILogger<PaymentsReceiver> logger, IAsyncConnectionFactory factory, PaymentSender sender)
+        public PaymentsReceiver(IConfiguration configuration, ILogger<PaymentsReceiver> logger, IAsyncConnectionFactory factory, PaymentSender sender)
         {
 
             _logger = logger;
@@ -25,8 +27,9 @@ namespace PaymentManager.Services
             _sender = sender;
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
+            _configuration = configuration;
 
-            _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
+            _factory.Uri = new Uri(_configuration[AuthConstants.RabbitMqUri]);
             _factory.ClientProvidedName = "Payments Receiver";
 
             _channel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Direct, durable: false, autoDelete: false, arguments: null);

@@ -15,20 +15,21 @@ namespace LobbyManager.Services
         private readonly string _exchangeName = "exchangerz";
         private readonly string _routingKey = "Lobby";
         private readonly string _queueName = "Lobby Queue";
+        private readonly IConfiguration _configuration;
         private readonly ILogger<LobbyReceiver> _logger;
         private readonly IAsyncConnectionFactory _factory;
         private readonly LobbySender _sender;
 
-        public LobbyReceiver(ILogger<LobbyReceiver> logger, IAsyncConnectionFactory factory, LobbySender sender)
+        public LobbyReceiver(IConfiguration configuration, ILogger<LobbyReceiver> logger, IAsyncConnectionFactory factory, LobbySender sender)
         {
-
+            _configuration = configuration;
             _logger = logger;
             _factory = factory;
             _sender = sender;
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
 
-            _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
+            _factory.Uri = new Uri(_configuration[AuthConstants.RabbitMqUri]);
             _factory.ClientProvidedName = "Lobby Receiver";
 
             _channel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Direct, durable: false, autoDelete: false, arguments: null);

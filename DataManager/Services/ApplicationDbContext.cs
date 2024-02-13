@@ -21,5 +21,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<LobbyGameData> LobbyGameData { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Player> Players { get; set; }
+    public DbSet<Game> Games { get; set; }
 
 }
