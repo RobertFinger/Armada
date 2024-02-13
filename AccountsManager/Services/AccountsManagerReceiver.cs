@@ -19,7 +19,7 @@ namespace AccountsManager.Services
         private readonly AccountsManagerSender _sender;
         private readonly IConfiguration _configuration;
 
-        public AccountsManagerReceiver(ILogger<AccountsManagerReceiver> logger, IAsyncConnectionFactory factory, AccountsManagerSender sender, IConfiguration configuration)
+        public AccountsManagerReceiver(IConfiguration configuration, ILogger<AccountsManagerReceiver> logger, IAsyncConnectionFactory factory, AccountsManagerSender sender)
         {
 
             _logger = logger;

@@ -7,10 +7,12 @@ namespace Gateway.Services
 {
     public class GatewaySender
     {
+        private readonly IConfiguration _configuration;
         private readonly IAsyncConnectionFactory _factory;
 
-        public GatewaySender(ILogger<GatewaySender> logger, IAsyncConnectionFactory factory)
+        public GatewaySender(IConfiguration configuration, ILogger<GatewaySender> logger, IAsyncConnectionFactory factory)
         {
+            _configuration = configuration;
             _logger = logger;
             _factory = factory;
 
@@ -42,7 +44,7 @@ namespace Gateway.Services
         private void StartMessageService(MessageDestination destination, byte[] message)
         {
 
-            _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
+            _factory.Uri = new Uri(_configuration[AuthConstants.RabbitMqUri]);
             _factory.ClientProvidedName = "Gateway Sender";
 
             IConnection connection = _factory.CreateConnection();

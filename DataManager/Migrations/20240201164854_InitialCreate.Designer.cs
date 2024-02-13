@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataManager.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240201164854_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,70 +24,21 @@ namespace DataManager.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Models.Models.ChallengeWord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Challenge")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("GameId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PlayerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GameId");
-
-                    b.ToTable("ChallengeWord");
-                });
-
             modelBuilder.Entity("Models.Models.Game", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("Guesses")
+                    b.Property<int>("CorrectAnswer")
                         .HasColumnType("int");
 
-                    b.Property<int>("MaxLetters")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MinLetters")
+                    b.Property<int>("Rounds")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.ToTable("Games");
-                });
-
-            modelBuilder.Entity("Models.Models.LetterStatus", b =>
-                {
-                    b.Property<Guid>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("ChallengeWordId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Color")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Letter")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(1)");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("ChallengeWordId");
-
-                    b.ToTable("LetterStatus");
                 });
 
             modelBuilder.Entity("Models.Models.LobbyGameData", b =>
@@ -184,22 +138,6 @@ namespace DataManager.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Models.Models.ChallengeWord", b =>
-                {
-                    b.HasOne("Models.Models.Game", null)
-                        .WithMany("ChallengeWords")
-                        .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Models.Models.LetterStatus", b =>
-                {
-                    b.HasOne("Models.Models.ChallengeWord", null)
-                        .WithMany("LetterColors")
-                        .HasForeignKey("ChallengeWordId");
-                });
-
             modelBuilder.Entity("Models.Models.Player", b =>
                 {
                     b.HasOne("Models.Models.Game", null)
@@ -211,15 +149,8 @@ namespace DataManager.Migrations
                         .HasForeignKey("LobbyGameDataId");
                 });
 
-            modelBuilder.Entity("Models.Models.ChallengeWord", b =>
-                {
-                    b.Navigation("LetterColors");
-                });
-
             modelBuilder.Entity("Models.Models.Game", b =>
                 {
-                    b.Navigation("ChallengeWords");
-
                     b.Navigation("Players");
                 });
 

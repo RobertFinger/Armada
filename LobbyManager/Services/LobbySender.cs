@@ -6,10 +6,12 @@ namespace LobbyManager.Services
 {
     public class LobbySender
     {
+        private readonly IConfiguration _configuration;
         private readonly IAsyncConnectionFactory _factory;
 
-        public LobbySender(ILogger<LobbySender> logger, IAsyncConnectionFactory factory)
+        public LobbySender(IConfiguration configuration, ILogger<LobbySender> logger, IAsyncConnectionFactory factory)
         {
+            _configuration = configuration;
             _logger = logger;
             _factory = factory;
 
@@ -40,7 +42,7 @@ namespace LobbyManager.Services
         private void StartMessageService(MessageDestination destination, byte[] message)
         {
 
-            _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
+            _factory.Uri = new Uri(_configuration[AuthConstants.RabbitMqUri]);
             _factory.ClientProvidedName = "Lobby Sender";
 
             IConnection connection = _factory.CreateConnection();

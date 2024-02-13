@@ -21,6 +21,7 @@ namespace LobbyManager.Controllers
         [HttpGet("/GetLobbyName")]
         public string GetLobbyName()
         {
+            _logger.LogCritical("critically unimportant");
             return "hi";
         }
     }

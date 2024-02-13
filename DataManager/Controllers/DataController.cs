@@ -1,103 +1,67 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Models.Models;
-
 
 namespace DataManager.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]/Data"), Authorize]
     public class DataController : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly ILogger<DataController> _logger;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public DataController(ApplicationDbContext dbcontext)
+        public DataController(ILogger<DataController> logger, IServiceScopeFactory scopeFactory)
         {
-            _dbContext = dbcontext;
+            _logger = logger;
+            _scopeFactory = scopeFactory;
         }
 
-        public ActionResult Index()
+        [HttpPost("/SaveUserData/{id}")]
+        public async Task MessengerTest(User user)
         {
-            return View();
+            using var scope = _scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            _logger.LogInformation("Add user to database {user}", user);
+
+            dbContext.Users.Add(user);
+            await dbContext.SaveChangesAsync();
         }
 
-        [HttpPost]
-        public ActionResult AddNewPlayer(Player player)
+        [HttpGet("/GetLobby/")]
+        public async Task<List<LobbyGameData>> GetLobby(Guid lobby)
         {
-            if (ModelState.IsValid)
+
+            using var scope = _scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            _logger.LogInformation("Provide requested lobby {lobby}", lobby);
+
+            var lobbyItems = dbContext.LobbyGameData.Where(i => i.Id == lobby).ToList() ?? new List<LobbyGameData>();
+            var maxLobbyItems = 9;
+
+            var currentItems = lobbyItems.Count;
+            if (currentItems < maxLobbyItems)
             {
-                if (player.Id == Guid.Empty)
-                {
-                    player.Id = Guid.NewGuid();
-                }
-
-                _dbContext.Players.Add(player);
-                _dbContext.SaveChanges();
-
-                return RedirectToAction(nameof(Index));
+                Enumerable.Range(currentItems, maxLobbyItems - currentItems).ToList().ForEach(_ =>
+                    lobbyItems.Add(new LobbyGameData(lobby)));
             }
 
-            return View(player);
+            dbContext.LobbyGameData.AddRange(lobbyItems);
+            await dbContext.SaveChangesAsync();
+
+            return lobbyItems;
         }
 
-        // GET: DataController/Create
-        public ActionResult Create()
+        [HttpPost("/AddUserToGame/{id}")]
+        public async Task AddUserToGame(Guid lobby, Guid game, Guid player)
         {
-            return View();
+            using var scope = _scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            _logger.LogInformation("Add user to game: {game} player:{player}, lobby:{lobby}", game, player, lobby);
+
+            //dbContext.Users.Add(user);
+            //await dbContext.SaveChangesAsync();
         }
 
-        // POST: DataController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: DataController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: DataController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: DataController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: DataController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
     }
 }

@@ -6,10 +6,12 @@ namespace GameManager.Services
 {
     public class GameManagerSender
     {
+        private readonly IConfiguration _configuration;
         private readonly IAsyncConnectionFactory _factory;
 
-        public GameManagerSender(ILogger<GameManagerSender> logger, IAsyncConnectionFactory factory)
+        public GameManagerSender(IConfiguration configuration, ILogger<GameManagerSender> logger, IAsyncConnectionFactory factory)
         {
+            _configuration = configuration;
             _logger = logger;
             _factory = factory;
 
@@ -40,7 +42,7 @@ namespace GameManager.Services
         private void StartMessageService(MessageDestination destination, byte[] message)
         {
 
-            _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
+            _factory.Uri = new Uri(_configuration[AuthConstants.RabbitMqUri]);
             _factory.ClientProvidedName = "Lobby Sender";
 
             IConnection connection = _factory.CreateConnection();
