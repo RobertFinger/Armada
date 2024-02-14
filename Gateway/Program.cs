@@ -90,8 +90,8 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-var rabbitMQReceiver = app.Services.GetService<GatewayReceiver>();
-rabbitMQReceiver?.StartListening();
+//var rabbitMQReceiver = app.Services.GetService<GatewayReceiver>();
+//rabbitMQReceiver?.StartListening();
 
 app.MapControllers();
 
