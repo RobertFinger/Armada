@@ -34,6 +34,7 @@ public class GatewayController : ControllerBase, IDisposable
         _messages = messages;
 
         SetupRabbitMq();
+        StartListening();
     }
 
     private void SetupRabbitMq()
