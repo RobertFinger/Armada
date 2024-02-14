@@ -78,7 +78,6 @@ var webSocketOptions = new WebSocketOptions
 
 app.UseWebSockets(webSocketOptions);
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -89,9 +88,6 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-//var rabbitMQReceiver = app.Services.GetService<GatewayReceiver>();
-//rabbitMQReceiver?.StartListening();
 
 app.MapControllers();
 

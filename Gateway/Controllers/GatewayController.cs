@@ -81,22 +81,6 @@ public class GatewayController : ControllerBase, IDisposable
     }
 
 
-    [HttpGet("/MessengerTest")]
-    public void MessengerTest()
-    {
-        var messageForAccountsManager = "Gateway to Accounts Manager, come in Accounts Manager!";
-        var messageForDataManager = "Gateway to Data Manager, come in Data Manager!";
-        var messageForGameManager = "Gateway to LobbyGameData Manager, come in LobbyGameData Manager!";
-        var messageForLobbyManager = "Gateway to Lobby Manager, come in Lobby Manager!";
-        var messageForPaymentManager = "Gateway to Payment Manager, come in Payment Manager!";
-
-        _messages.SendMessage(MessageDestination.Accounts, messageForAccountsManager);
-        _messages.SendMessage(MessageDestination.Data, messageForDataManager);
-        _messages.SendMessage(MessageDestination.Game, messageForGameManager);
-        _messages.SendMessage(MessageDestination.Lobby, messageForLobbyManager);
-        _messages.SendMessage(MessageDestination.Payments, messageForPaymentManager);
-    }
-
     [HttpGet("/RequestLobby"), Authorize(Roles = "User")]
     public ActionResult<Guid> GetLobby(Guid? lobby, int gameType, string callBackUri)
     {
