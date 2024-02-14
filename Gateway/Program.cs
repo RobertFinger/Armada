@@ -1,10 +1,12 @@
 using Gateway.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Models.Models;
 using RabbitMQ.Client;
 using Swashbuckle.AspNetCore.Filters;
+using WebSocketSharp.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -69,6 +71,27 @@ builder.Services.AddSingleton<GatewaySender>();
 builder.Services.AddTransient<IAsyncConnectionFactory, ConnectionFactory>();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(appError =>
+{
+    appError.Run(async context =>
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
+        if (contextFeature != null)
+        {
+            await context.Response.WriteAsync(new ErrorDetails()
+            {
+                StatusCode = context.Response.StatusCode,
+                Message = "Internal Server Error. " + contextFeature.Error.Message
+            }.ToString());
+        }
+    });
+});
+
+
 
 app.UseCors("MyCorsPolicy");
 var webSocketOptions = new WebSocketOptions
